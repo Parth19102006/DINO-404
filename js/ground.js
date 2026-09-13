@@ -5,7 +5,7 @@
  * cracks, and procedural pebbles with seamless right-to-left scrolling.
  */
 
-import { GAME_WIDTH, GAME_HEIGHT, GROUND_Y, GAME_SPEED } from './constants.js';
+import { GAME_WIDTH, GAME_HEIGHT, GROUND_Y, INITIAL_SPEED } from './constants.js';
 
 export class Ground {
   constructor() {
@@ -77,8 +77,8 @@ export class Ground {
     return features;
   }
 
-  update() {
-    this.offsetX += GAME_SPEED;
+  update(speed = INITIAL_SPEED) {
+    this.offsetX += speed;
     if (this.offsetX >= this.patternWidth) {
       this.offsetX -= this.patternWidth;
     }

@@ -1,14 +1,17 @@
 /**
  * Dragon Runner - Input Handler
- * Captures keyboard (Space, ArrowUp) and touch/pointer events.
- * Prevents default browser scrolling and enforces single-jump per press.
+ * Captures keyboard (Space, ArrowUp, Enter) and touch/pointer events.
+ * Separates jump inputs from start/restart triggers to prevent accidental auto-restarts.
  */
 
 export class InputHandler {
   constructor() {
     this.jumpPressed = false;
+    this.startOrRestartPressed = false;
+
     this.spaceDown = false;
     this.arrowUpDown = false;
+    this.enterDown = false;
     this.touchActive = false;
 
     this.initListeners();
@@ -17,17 +20,23 @@ export class InputHandler {
   initListeners() {
     // Keyboard listeners
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp') {
-        // Prevent page scrolling on Space and ArrowUp
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') {
+        // Prevent default browser page scrolling
         e.preventDefault();
 
         if (e.code === 'Space' && !this.spaceDown) {
           this.spaceDown = true;
           this.jumpPressed = true;
+          this.startOrRestartPressed = true;
         }
         if (e.code === 'ArrowUp' && !this.arrowUpDown) {
           this.arrowUpDown = true;
           this.jumpPressed = true;
+          this.startOrRestartPressed = true;
+        }
+        if (e.code === 'Enter' && !this.enterDown) {
+          this.enterDown = true;
+          this.startOrRestartPressed = true;
         }
       }
     }, { passive: false });
@@ -39,17 +48,20 @@ export class InputHandler {
       if (e.code === 'ArrowUp') {
         this.arrowUpDown = false;
       }
+      if (e.code === 'Enter') {
+        this.enterDown = false;
+      }
     });
 
-    // Touch and Pointer listeners for mobile support
+    // Touch listeners
     const handleTouchStart = (e) => {
-      // Prevent default gesture scrolling/zooming during gameplay
       if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
         e.preventDefault();
       }
       if (!this.touchActive) {
         this.touchActive = true;
         this.jumpPressed = true;
+        this.startOrRestartPressed = true;
       }
     };
 
@@ -61,19 +73,17 @@ export class InputHandler {
     window.addEventListener('touchend', handleTouchEnd, { passive: false });
     window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-    // Also support mouse click / pointerdown for testing mobile emulation
+    // Pointer down for mouse clicks
     window.addEventListener('pointerdown', (e) => {
-      // Only handle primary button / touches
-      if (e.pointerType === 'touch' || e.button === 0) {
-        if (!this.touchActive && e.target.tagName !== 'BUTTON') {
-          this.jumpPressed = true;
-        }
+      if (e.target.tagName !== 'BUTTON' && (e.pointerType === 'touch' || e.button === 0)) {
+        this.jumpPressed = true;
+        this.startOrRestartPressed = true;
       }
     });
   }
 
   /**
-   * Consumes and returns true if a jump was requested this frame.
+   * Consumes jump command during RUNNING gameplay.
    */
   consumeJump() {
     if (this.jumpPressed) {
@@ -81,5 +91,28 @@ export class InputHandler {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Consumes start/restart command for READY and GAMEOVER states.
+   */
+  consumeStartOrRestart() {
+    if (this.startOrRestartPressed) {
+      this.startOrRestartPressed = false;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Resets all input triggers and key states.
+   */
+  reset() {
+    this.jumpPressed = false;
+    this.startOrRestartPressed = false;
+    this.spaceDown = false;
+    this.arrowUpDown = false;
+    this.enterDown = false;
+    this.touchActive = false;
   }
 }

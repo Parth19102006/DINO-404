@@ -3,11 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Dragon Runner - Phase 1 Core</title>
+  <title>Dragon Runner - 404 Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+  <!-- Reusable 404 Game Container -->
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top-Right Live Score HUD -->
+    <div id="score-hud">
+      <span class="hud-label">BEST</span>
+      <span id="best-score" class="hud-val">00000</span>
+      <span class="hud-label">SCORE</span>
+      <span id="current-score" class="hud-val">00000</span>
+    </div>
+
+    <!-- Start Overlay (READY State) -->
+    <div id="start-overlay">
+      <div id="start-card">
+        <h2 class="start-title">PRESS SPACE TO START</h2>
+        <p class="start-subtitle">Or TAP the screen to play</p>
+      </div>
+    </div>
+
+    <!-- Centered HTML/CSS Game Over Modal (No Blur) -->
+    <div id="game-over-overlay" class="hidden">
+      <div id="game-over-card">
+        <h1 class="game-over-title">GAME OVER</h1>
+        <div class="score-summary">
+          <div class="score-row">
+            <span class="score-label">SCORE</span>
+            <span id="final-score" class="score-number">0</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">BEST</span>
+            <span id="final-best-score" class="score-number">0</span>
+          </div>
+        </div>
+        <button id="restart-btn" type="button">RESTART</button>
+        <p class="restart-hint">Press SPACE, ENTER or TAP to restart</p>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

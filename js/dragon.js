@@ -11,6 +11,7 @@ import {
   GROUND_Y,
   GRAVITY,
   JUMP_FORCE,
+  JUMP_FORCE_BOOSTED,
   RUN_ANIMATION_INTERVAL
 } from './constants.js';
 
@@ -35,6 +36,16 @@ export class Dragon {
       hit: null
     };
     this.loaded = false;
+  }
+
+  reset() {
+    this.x = DRAGON_X;
+    this.y = GROUND_Y;
+    this.vy = 0;
+    this.isGrounded = true;
+    this.isHit = false;
+    this.animTimer = 0;
+    this.runFrameIndex = 0;
   }
 
   /**
@@ -74,9 +85,10 @@ export class Dragon {
   /**
    * Triggers a jump if the dragon is grounded and not currently hit.
    */
-  jump() {
+  jump(score = 0) {
     if (this.isGrounded && !this.isHit) {
-      this.vy = JUMP_FORCE;
+      // Apply slight jump boost when score >= 200 for comfortable clearance over flying obstacles
+      this.vy = score >= 200 ? JUMP_FORCE_BOOSTED : JUMP_FORCE;
       this.isGrounded = false;
     }
   }
@@ -110,8 +122,9 @@ export class Dragon {
    * Updates dragon physics and timestamp-based animation frame swap.
    * @param {InputHandler} inputHandler
    * @param {number} dt Delta time in milliseconds
+   * @param {number} score Current internal game score
    */
-  update(inputHandler, dt = 16.66) {
+  update(inputHandler, dt = 16.66, score = 0) {
     if (this.isHit) {
       // Keep on ground if hit
       if (!this.isGrounded) {
@@ -128,7 +141,7 @@ export class Dragon {
 
     // Check for jump input
     if (inputHandler.consumeJump()) {
-      this.jump();
+      this.jump(score);
     }
 
     // Apply gravity & vertical velocity integration

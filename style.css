@@ -1,4 +1,5 @@
-/* Dragon Runner - Responsive Viewport & Base Styles */
+/* Dragon Runner - Responsive Viewport, Start Overlay, Score HUD & Game Over (No Blur) */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,13 +14,245 @@ html, body {
   height: 100%;
   overflow: hidden;
   background-color: #0f0f13;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #e0e0e0;
   touch-action: none;
+}
+
+/* Reusable Game Container */
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: #0f0f13;
 }
 
 #gameCanvas {
   display: block;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   touch-action: none;
+}
+
+/* Live Score HUD (Top-Right) */
+#score-hud {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #727282;
+  background: rgba(20, 20, 26, 0.85);
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-label {
+  font-size: 12px;
+  color: #656575;
+}
+
+.hud-val {
+  color: #f0f0f8;
+  font-size: 18px;
+}
+
+/* Start Overlay (READY State) */
+#start-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 14, 0.35);
+  z-index: 15;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+#start-overlay.hidden {
+  display: none;
+  opacity: 0;
+}
+
+#start-card {
+  background: rgba(22, 22, 30, 0.92);
+  border: 1px solid #363646;
+  border-radius: 10px;
+  padding: 24px 36px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  animation: pulseStart 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseStart {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.start-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.start-subtitle {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: #828296;
+  text-transform: uppercase;
+}
+
+/* Centered Game Over Modal (NO BLUR - 100% Crisp Visible Scene) */
+#game-over-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 14, 0.45); /* Translucent without blur */
+  z-index: 20;
+}
+
+#game-over-overlay.hidden {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#game-over-card {
+  background: rgba(22, 22, 30, 0.94);
+  border: 1px solid #383848;
+  border-radius: 12px;
+  padding: 30px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  min-width: 320px;
+  max-width: 90vw;
+  text-align: center;
+  animation: modalPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.game-over-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #ffffff;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.score-summary {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.score-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.score-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #7e7e90;
+}
+
+.score-number {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 26px;
+  font-weight: 800;
+  color: #f4f4f8;
+}
+
+#restart-btn {
+  background: #ffffff;
+  color: #121216;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 12px 36px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 48px;
+  min-width: 160px;
+  outline: none;
+}
+
+#restart-btn:hover {
+  background: #e2e2ec;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+#restart-btn:active {
+  transform: translateY(1px);
+  background: #cccccc;
+}
+
+.restart-hint {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #656576;
+  margin-top: 14px;
+  text-transform: uppercase;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  #score-hud {
+    top: 12px;
+    right: 14px;
+    padding: 6px 12px;
+    font-size: 14px;
+    gap: 8px;
+  }
+  .hud-val {
+    font-size: 15px;
+  }
+  #start-card {
+    padding: 18px 24px;
+  }
+  .start-title {
+    font-size: 16px;
+    letter-spacing: 1.5px;
+  }
+  #game-over-card {
+    padding: 24px 28px;
+    min-width: 280px;
+  }
+  .game-over-title {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+  .score-number {
+    font-size: 20px;
+  }
 }
