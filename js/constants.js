@@ -15,8 +15,9 @@ export const DRAGON_HEIGHT = 80;
 
 // Tuned Jump & Gravity Physics (Smoother, slower, longer horizontal leap)
 export const GRAVITY = 0.42;
-export const JUMP_FORCE = -13.2;
-export const JUMP_FORCE_BOOSTED = -14.4;
+export const JUMP_FORCE = -12.4;
+export const JUMP_FORCE_BOOSTED = -13.6;
+export const JUMP_RAMP_FRAMES = 3;
 
 // Speed Progression Configuration (Starts at 4.0, increases by +0.2 every 50 points)
 export const INITIAL_SPEED = 4.0;

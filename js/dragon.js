@@ -12,6 +12,7 @@ import {
   GRAVITY,
   JUMP_FORCE,
   JUMP_FORCE_BOOSTED,
+  JUMP_RAMP_FRAMES,
   RUN_ANIMATION_INTERVAL
 } from './constants.js';
 
@@ -20,6 +21,8 @@ export class Dragon {
     this.x = DRAGON_X;
     this.y = GROUND_Y;
     this.vy = 0;
+    this.jumpImpulse = 0;
+    this.jumpImpulseFramesRemaining = 0;
     this.isGrounded = true;
     this.isHit = false;
 
@@ -42,6 +45,8 @@ export class Dragon {
     this.x = DRAGON_X;
     this.y = GROUND_Y;
     this.vy = 0;
+    this.jumpImpulse = 0;
+    this.jumpImpulseFramesRemaining = 0;
     this.isGrounded = true;
     this.isHit = false;
     this.animTimer = 0;
@@ -88,7 +93,9 @@ export class Dragon {
   jump(score = 0) {
     if (this.isGrounded && !this.isHit) {
       // Apply slight jump boost when score >= 200 for comfortable clearance over flying obstacles
-      this.vy = score >= 200 ? JUMP_FORCE_BOOSTED : JUMP_FORCE;
+      const jumpForce = score >= 200 ? JUMP_FORCE_BOOSTED : JUMP_FORCE;
+      this.jumpImpulse = jumpForce / JUMP_RAMP_FRAMES;
+      this.jumpImpulseFramesRemaining = JUMP_RAMP_FRAMES;
       this.isGrounded = false;
     }
   }
@@ -146,6 +153,10 @@ export class Dragon {
 
     // Apply gravity & vertical velocity integration
     if (!this.isGrounded) {
+      if (this.jumpImpulseFramesRemaining > 0) {
+        this.vy += this.jumpImpulse;
+        this.jumpImpulseFramesRemaining -= 1;
+      }
       this.vy += GRAVITY;
       this.y += this.vy;
 
