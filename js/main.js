@@ -11,6 +11,7 @@ import {
   INITIAL_SPEED,
   SPEED_INCREMENT,
   SPEED_INTERVAL_POINTS,
+  FRAME_TIME,
   STORAGE_BEST_SCORE_KEY
 } from './constants.js';
 import { InputHandler } from './input.js';
@@ -135,6 +136,8 @@ class GameEngine {
   }
 
   update(dt) {
+    const frameScale = dt / FRAME_TIME;
+
     if (this.gameState === 'READY') {
       // Check if player initiated start via Space, ArrowUp, Enter, or Tap
       if (this.inputHandler.consumeStartOrRestart()) {
@@ -148,13 +151,13 @@ class GameEngine {
 
     if (this.gameState === 'RUNNING') {
       // 1. Move clouds at parallax speed
-      this.cloudManager.update(this.currentSpeed);
+      this.cloudManager.update(this.currentSpeed, frameScale);
 
       // 2. Move ground
-      this.ground.update(this.currentSpeed);
+      this.ground.update(this.currentSpeed, frameScale);
 
       // 3. Move obstacles and collect points from newly passed obstacles
-      const earnedPoints = this.obstacleManager.update(this.currentSpeed, this.score);
+      const earnedPoints = this.obstacleManager.update(this.currentSpeed, this.score, frameScale);
       if (earnedPoints > 0) {
         this.score += earnedPoints;
 
@@ -164,7 +167,7 @@ class GameEngine {
           this.saveBestScore();
         }
 
-        // Update speed progression: +0.2 px/frame every 50 points
+        // Update speed progression: +0.5 px/frame every 50 points
         const speedSteps = Math.floor(this.score / SPEED_INTERVAL_POINTS);
         this.currentSpeed = INITIAL_SPEED + (speedSteps * SPEED_INCREMENT);
 

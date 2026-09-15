@@ -1,11 +1,11 @@
 /**
  * Dragon Runner - Redesigned Canvas-Drawn Obstacles
  * Faithfully matches the provided visual reference for all 6 obstacles:
- * 1. STONE (44x26) - Rounded boulder with side pebble and grass sprigs (+10 pts)
- * 2. CRYSTAL (44x42) - Central tall crystal spire with flanking crystals & shards (+20 pts)
- * 3. BUSH (52x34) - Fan-shaped radiating pointed foliage cluster (+30 pts)
- * 4. RUINS (58x46) - Broken left column, fallen fragment, right pillar with lintel (+40 pts)
- * 5. ROCK SPIKES (60x44) - Five sharp triangular spires in stepped row (+50 pts)
+ * 1. STONE (44x36 visual, 44x26 collision) - Rounded boulder with side pebble and grass sprigs (+10 pts)
+ * 2. CRYSTAL (50x55 visual, 44x42 collision) - Central tall crystal spire with flanking crystals & shards (+20 pts)
+ * 3. BUSH (60x55 visual, 52x34 collision) - Fan-shaped radiating pointed foliage cluster (+30 pts)
+ * 4. RUINS (65x65 visual, 58x46 collision) - Broken left column, fallen fragment, right pillar with lintel (+40 pts)
+ * 5. ROCK SPIKES (65x60 visual, 60x44 collision) - Five sharp triangular spires in stepped row (+50 pts)
  * 6. FLYING (58x34) - Winged dragon/drone soaring at altitude (+30 pts)
  */
 
@@ -32,10 +32,10 @@ export class Obstacle {
     this.flapTimer = 0;
   }
 
-  update(speed) {
-    this.x -= speed;
+  update(speed, frameScale = 1) {
+    this.x -= speed * frameScale;
     if (this.isFlying) {
-      this.flapTimer += 0.09;
+      this.flapTimer += 0.09 * frameScale;
     }
   }
 
@@ -43,19 +43,25 @@ export class Obstacle {
    * Inset collision box for fair AABB collision detection.
    */
   getCollisionBox() {
-    const padX = this.isFlying ? 5 : 4;
-    const padY = this.isFlying ? 4 : 3;
+    const padX = this.isFlying ? 6 : 5;
+    const padY = this.isFlying ? 6 : 5;
     return {
       x: this.x + padX,
       y: this.y + padY,
-      w: this.width - (padX * 2),
-      h: this.height - padY
+      w: Math.max(this.width - (padX * 2), 10),
+      h: Math.max(this.height - padY, 12)
     };
   }
 
   draw(ctx) {
+    const renderDimensions = this.getRenderDimensions();
+
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(
+      this.x - ((renderDimensions.w - this.width) / 2),
+      this.y - (renderDimensions.h - this.height)
+    );
+    ctx.scale(renderDimensions.w / this.width, renderDimensions.h / this.height);
 
     switch (this.type) {
       case 'STONE':
@@ -65,7 +71,7 @@ export class Obstacle {
         this.drawCrystal(ctx);
         break;
       case 'BUSH':
-        this.drawBush(ctx);
+        this.drawSingleSpike(ctx);
         break;
       case 'RUINS':
         this.drawRuins(ctx);
@@ -81,6 +87,25 @@ export class Obstacle {
     }
 
     ctx.restore();
+  }
+
+  getRenderDimensions() {
+    switch (this.type) {
+      case 'STONE':
+        return { w: 44, h: 44 };
+      case 'CRYSTAL':
+        return { w: 50, h: 58 };
+      case 'BUSH':
+        return { w: 48, h: 58 };
+      case 'RUINS':
+        return { w: 65, h: 64 };
+      case 'ROCK_SPIKES':
+        return { w: 65, h: 58 };
+      case 'FLYING':
+        return { w: 58, h: 46 };
+      default:
+        return { w: this.width, h: this.height };
+    }
   }
 
   // 1. STONE (44x26) — Rounded faceted boulder with side pebble and grass
@@ -174,249 +199,226 @@ export class Obstacle {
     ctx.stroke();
   }
 
-  // 2. CRYSTAL (44x42) — Central tall crystal spire with flanking crystals & shards
+  // 2. CRYSTAL (50x45) — Central tall crystal spire with flanking crystals
   drawCrystal(ctx) {
     const w = this.width;
     const h = this.height;
 
-    // 1. Center Tall Spire (Apex at w*0.5, 2)
-    // Bright left facet
+    // Center tall crystal (apex at w*0.4, 2)
     ctx.fillStyle = '#f2f2fa';
     ctx.beginPath();
-    ctx.moveTo(w * 0.5, 2);
-    ctx.lineTo(w * 0.34, h * 0.38);
-    ctx.lineTo(w * 0.46, h);
-    ctx.lineTo(w * 0.5, h);
-    ctx.closePath();
+    ctx.moveTo(w * 0.4, 2);
+    ctx.lineTo(w * 0.25, h * 0.4);
+    ctx.lineTo(w * 0.35, h);
+    ctx.lineTo(w * 0.4, h);
     ctx.fill();
 
-    // Dark right facet
     ctx.fillStyle = '#2c2c38';
     ctx.beginPath();
-    ctx.moveTo(w * 0.5, 2);
-    ctx.lineTo(w * 0.66, h * 0.34);
-    ctx.lineTo(w * 0.58, h);
+    ctx.moveTo(w * 0.4, 2);
+    ctx.lineTo(w * 0.6, h * 0.35);
     ctx.lineTo(w * 0.5, h);
-    ctx.closePath();
+    ctx.lineTo(w * 0.4, h);
     ctx.fill();
 
-    // 2. Left Angled Crystal (Apex at w*0.18, h*0.28)
+    // Right smaller crystal (apex at w*0.75, h*0.3)
     ctx.fillStyle = '#c4c4d4';
     ctx.beginPath();
-    ctx.moveTo(w * 0.18, h * 0.28);
-    ctx.lineTo(w * 0.06, h * 0.55);
-    ctx.lineTo(w * 0.22, h);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#3a3a46';
-    ctx.beginPath();
-    ctx.moveTo(w * 0.18, h * 0.28);
-    ctx.lineTo(w * 0.34, h * 0.48);
-    ctx.lineTo(w * 0.24, h);
-    ctx.closePath();
+    ctx.moveTo(w * 0.75, h * 0.3);
+    ctx.lineTo(w * 0.55, h * 0.6);
+    ctx.lineTo(w * 0.65, h);
     ctx.fill();
 
-    // 3. Right Angled Crystal (Apex at w*0.82, h*0.32)
-    ctx.fillStyle = '#8e8e9e';
-    ctx.beginPath();
-    ctx.moveTo(w * 0.82, h * 0.32);
-    ctx.lineTo(w * 0.68, h * 0.52);
-    ctx.lineTo(w * 0.74, h);
-    ctx.closePath();
-    ctx.fill();
     ctx.fillStyle = '#1e1e26';
     ctx.beginPath();
-    ctx.moveTo(w * 0.82, h * 0.32);
-    ctx.lineTo(w * 0.94, h * 0.6);
-    ctx.lineTo(w * 0.82, h);
-    ctx.closePath();
+    ctx.moveTo(w * 0.75, h * 0.3);
+    ctx.lineTo(w * 0.9, h * 0.65);
+    ctx.lineTo(w * 0.75, h);
     ctx.fill();
 
-    // Outlines
-    ctx.strokeStyle = '#121216';
-    ctx.lineWidth = 1.8;
-    // Central spire
+    // Left smaller crystal (apex at w*0.15, h*0.4)
+    ctx.fillStyle = '#8e8e9e';
     ctx.beginPath();
-    ctx.moveTo(w * 0.5, 2); ctx.lineTo(w * 0.34, h * 0.38); ctx.lineTo(w * 0.34, h);
-    ctx.moveTo(w * 0.5, 2); ctx.lineTo(w * 0.66, h * 0.34); ctx.lineTo(w * 0.66, h);
-    ctx.moveTo(w * 0.5, 2); ctx.lineTo(w * 0.5, h);
-    // Left crystal
-    ctx.moveTo(w * 0.18, h * 0.28); ctx.lineTo(w * 0.06, h * 0.55); ctx.lineTo(w * 0.06, h);
-    ctx.moveTo(w * 0.18, h * 0.28); ctx.lineTo(w * 0.34, h * 0.48);
-    // Right crystal
-    ctx.moveTo(w * 0.82, h * 0.32); ctx.lineTo(w * 0.68, h * 0.52);
-    ctx.moveTo(w * 0.82, h * 0.32); ctx.lineTo(w * 0.94, h * 0.6); ctx.lineTo(w * 0.94, h);
+    ctx.moveTo(w * 0.15, h * 0.4);
+    ctx.lineTo(w * 0.05, h * 0.7);
+    ctx.lineTo(w * 0.15, h);
+    ctx.fill();
+
+    ctx.fillStyle = '#3a3a46';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.15, h * 0.4);
+    ctx.lineTo(w * 0.3, h * 0.6);
+    ctx.lineTo(w * 0.2, h);
+    ctx.fill();
+
+    // Outlines & highlights
+    ctx.strokeStyle = '#121216';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    // center
+    ctx.moveTo(w * 0.4, 2); ctx.lineTo(w * 0.25, h * 0.4); ctx.lineTo(w * 0.35, h);
+    ctx.moveTo(w * 0.4, 2); ctx.lineTo(w * 0.6, h * 0.35); ctx.lineTo(w * 0.5, h);
+    ctx.moveTo(w * 0.4, 2); ctx.lineTo(w * 0.4, h);
+    // right
+    ctx.moveTo(w * 0.75, h * 0.3); ctx.lineTo(w * 0.55, h * 0.6);
+    ctx.moveTo(w * 0.75, h * 0.3); ctx.lineTo(w * 0.9, h * 0.65); ctx.lineTo(w * 0.75, h);
+    ctx.moveTo(w * 0.75, h * 0.3); ctx.lineTo(w * 0.65, h);
+    // left
+    ctx.moveTo(w * 0.15, h * 0.4); ctx.lineTo(w * 0.05, h * 0.7); ctx.lineTo(w * 0.15, h);
+    ctx.moveTo(w * 0.15, h * 0.4); ctx.lineTo(w * 0.3, h * 0.6);
+    ctx.moveTo(w * 0.15, h * 0.4); ctx.lineTo(w * 0.2, h);
     ctx.stroke();
 
-    // Base crystal shards & grass
-    ctx.fillStyle = '#4a4a58';
-    ctx.beginPath();
-    ctx.moveTo(w * 0.02, h); ctx.lineTo(w * 0.12, h * 0.75); ctx.lineTo(w * 0.18, h);
-    ctx.moveTo(w * 0.84, h); ctx.lineTo(w * 0.92, h * 0.72); ctx.lineTo(w * 0.98, h);
-    ctx.fill();
-
-    // White edge highlights
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(w * 0.49, 4); ctx.lineTo(w * 0.35, h * 0.36);
-    ctx.moveTo(w * 0.17, h * 0.3); ctx.lineTo(w * 0.08, h * 0.54);
+    ctx.moveTo(w * 0.39, 4); ctx.lineTo(w * 0.26, h * 0.4);
+    ctx.moveTo(w * 0.74, h * 0.32); ctx.lineTo(w * 0.57, h * 0.6);
     ctx.stroke();
   }
 
-  // 3. BUSH (52x34) — Fan-shaped radiating pointed foliage cluster
-  drawBush(ctx) {
+  // 3. SINGLE SPIKE (40x50) (Replaces BUSH)
+  drawSingleSpike(ctx) {
     const w = this.width;
     const h = this.height;
 
-    // Radiating leaf petal helper
-    const drawLeaf = (cx, cy, length, angle, fill, outline = true) => {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-      ctx.fillStyle = fill;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(length * 0.3, -length * 0.22, length, 0);
-      ctx.quadraticCurveTo(length * 0.3, length * 0.22, 0, 0);
-      ctx.closePath();
-      ctx.fill();
-      if (outline) {
-        ctx.strokeStyle = '#121216';
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-      }
-      ctx.restore();
-    };
-
-    const rootX = w * 0.5;
-    const rootY = h;
-
-    // Back dark leaves
-    const backAngles = [-1.4, -1.1, -0.8, -0.5, -0.2, 0.1, 0.4, 0.7, 1.0, 1.3];
-    for (const a of backAngles) {
-      drawLeaf(rootX, rootY, h * 0.95, a - Math.PI / 2, '#202028');
-    }
-
-    // Mid-tone leaves
-    const midAngles = [-1.2, -0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9, 1.2];
-    for (const a of midAngles) {
-      drawLeaf(rootX, rootY, h * 0.85, a - Math.PI / 2, '#7a7a8a');
-    }
-
-    // Front light leaves
-    const frontAngles = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9];
-    for (const a of frontAngles) {
-      drawLeaf(rootX, rootY, h * 0.75, a - Math.PI / 2, '#dedee8');
-    }
-
-    // Top bright highlight tips
-    ctx.fillStyle = '#ffffff';
-    for (const a of [-0.6, -0.3, 0, 0.3, 0.6]) {
-      const angle = a - Math.PI / 2;
-      const tx = rootX + Math.cos(angle) * (h * 0.68);
-      const ty = rootY + Math.sin(angle) * (h * 0.68);
-      ctx.beginPath();
-      ctx.arc(tx, ty, 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Base soil mound
-    ctx.fillStyle = '#18181f';
+    // Main spike bright left facet
+    ctx.fillStyle = '#d4d4de';
     ctx.beginPath();
-    ctx.ellipse(rootX, h, w * 0.46, 5, 0, 0, Math.PI * 2);
+    ctx.moveTo(w * 0.5, 2);
+    ctx.lineTo(w * 0.2, h * 0.4);
+    ctx.lineTo(w * 0.1, h);
+    ctx.lineTo(w * 0.5, h);
     ctx.fill();
+
+    // Main spike dark right facet
+    ctx.fillStyle = '#30303a';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.5, 2);
+    ctx.lineTo(w * 0.8, h * 0.45);
+    ctx.lineTo(w * 0.9, h);
+    ctx.lineTo(w * 0.5, h);
+    ctx.fill();
+
+    // Base jagged rocks
+    ctx.fillStyle = '#22222a';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.05, h);
+    ctx.lineTo(w * 0.2, h * 0.8);
+    ctx.lineTo(w * 0.4, h * 0.9);
+    ctx.lineTo(w * 0.7, h * 0.75);
+    ctx.lineTo(w * 0.95, h);
+    ctx.fill();
+
+    // Cracks & shading lines
+    ctx.strokeStyle = '#121216';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    // Outline
+    ctx.moveTo(w * 0.1, h);
+    ctx.lineTo(w * 0.2, h * 0.4);
+    ctx.lineTo(w * 0.5, 2);
+    ctx.lineTo(w * 0.8, h * 0.45);
+    ctx.lineTo(w * 0.9, h);
+    
+    // Center ridge
+    ctx.moveTo(w * 0.5, 2);
+    ctx.lineTo(w * 0.45, h * 0.4);
+    ctx.lineTo(w * 0.5, h * 0.7);
+    ctx.lineTo(w * 0.5, h);
+    
+    // Side cracks
+    ctx.moveTo(w * 0.2, h * 0.4);
+    ctx.lineTo(w * 0.35, h * 0.55);
+    
+    ctx.moveTo(w * 0.8, h * 0.45);
+    ctx.lineTo(w * 0.65, h * 0.6);
+    
+    ctx.stroke();
+
+    // White rim highlight
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.48, 4);
+    ctx.lineTo(w * 0.22, h * 0.4);
+    ctx.stroke();
   }
 
-  // 4. RUINS (58x46) — Broken left column, fallen stone, right pillar with lintel
+  // 4. RUINS (65x55)
   drawRuins(ctx) {
     const w = this.width;
     const h = this.height;
 
-    // 1. Left Pillar (Broken Column)
-    // Light front
-    ctx.fillStyle = '#d2d2dc';
-    ctx.fillRect(w * 0.08, h * 0.22, w * 0.18, h * 0.78);
-    // Dark shadow side
-    ctx.fillStyle = '#303038';
-    ctx.fillRect(w * 0.26, h * 0.22, w * 0.08, h * 0.78);
-    // Left pillar stepped base
-    ctx.fillStyle = '#e0e0ea';
-    ctx.fillRect(w * 0.05, h * 0.88, w * 0.32, h * 0.12);
-
-    // Broken top of left pillar
+    // Pillar 1 (Left)
+    ctx.fillStyle = '#d2d2dc'; // Light
+    ctx.fillRect(w * 0.1, h * 0.3, w * 0.15, h * 0.7);
+    ctx.fillStyle = '#303038'; // Dark
+    ctx.fillRect(w * 0.25, h * 0.3, w * 0.05, h * 0.7);
+    
+    // Left broken top
     ctx.fillStyle = '#18181f';
     ctx.beginPath();
-    ctx.moveTo(w * 0.08, h * 0.22);
-    ctx.lineTo(w * 0.18, h * 0.32);
-    ctx.lineTo(w * 0.34, h * 0.22);
-    ctx.lineTo(w * 0.34, h * 0.22);
-    ctx.closePath();
+    ctx.moveTo(w * 0.1, h * 0.3);
+    ctx.lineTo(w * 0.15, h * 0.2);
+    ctx.lineTo(w * 0.3, h * 0.3);
     ctx.fill();
 
-    // 2. Fallen Stone Fragment in Middle
+    // Pillar 2 (Right)
+    ctx.fillStyle = '#d2d2dc'; // Light
+    ctx.fillRect(w * 0.65, h * 0.2, w * 0.15, h * 0.8);
+    ctx.fillStyle = '#303038'; // Dark
+    ctx.fillRect(w * 0.8, h * 0.2, w * 0.05, h * 0.8);
+
+    // Arch/beam connecting them (partially broken)
+    ctx.fillStyle = '#dcdce4'; // Light
+    ctx.fillRect(w * 0.45, h * 0.1, w * 0.35, h * 0.15);
+    ctx.fillStyle = '#2a2a32'; // Dark
+    ctx.fillRect(w * 0.45, h * 0.25, w * 0.35, h * 0.05);
+
+    // Middle small broken pillar
     ctx.fillStyle = '#7a7a88';
-    ctx.fillRect(w * 0.38, h * 0.72, w * 0.12, h * 0.28);
-
-    // 3. Right Pillar with Lintel Capstone
-    // Pillar body
-    ctx.fillStyle = '#dcdce4';
-    ctx.fillRect(w * 0.62, h * 0.28, w * 0.18, h * 0.72);
-    ctx.fillStyle = '#2a2a32';
-    ctx.fillRect(w * 0.8, h * 0.28, w * 0.08, h * 0.72);
-    // Stepped base
-    ctx.fillStyle = '#e0e0ea';
-    ctx.fillRect(w * 0.58, h * 0.88, w * 0.32, h * 0.12);
-
-    // Horizontal Lintel Capstone resting on top
-    ctx.fillStyle = '#f0f0f8';
-    ctx.fillRect(w * 0.52, 2, w * 0.42, h * 0.26);
-    ctx.fillStyle = '#3a3a44';
-    ctx.fillRect(w * 0.88, 2, w * 0.06, h * 0.26);
-    ctx.fillStyle = '#22222a';
-    ctx.fillRect(w * 0.52, h * 0.22, w * 0.42, h * 0.06);
-
-    // Outlines & Masonry Lines
+    ctx.fillRect(w * 0.4, h * 0.6, w * 0.15, h * 0.4);
+    
+    // Outlines & Masonry
     ctx.strokeStyle = '#121216';
-    ctx.lineWidth = 1.8;
-    // Left column outline
-    ctx.strokeRect(w * 0.08, h * 0.22, w * 0.26, h * 0.78);
-    ctx.strokeRect(w * 0.05, h * 0.88, w * 0.32, h * 0.12);
-    // Right pillar outline
-    ctx.strokeRect(w * 0.62, h * 0.28, w * 0.26, h * 0.72);
-    ctx.strokeRect(w * 0.58, h * 0.88, w * 0.32, h * 0.12);
-    // Lintel outline
-    ctx.strokeRect(w * 0.52, 2, w * 0.42, h * 0.26);
-    // Middle stone outline
-    ctx.strokeRect(w * 0.38, h * 0.72, w * 0.12, h * 0.28);
-
-    // Brick mortar lines
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(w * 0.08, h * 0.55); ctx.lineTo(w * 0.34, h * 0.55);
-    ctx.moveTo(w * 0.62, h * 0.58); ctx.lineTo(w * 0.88, h * 0.58);
+    // Left pillar outline
+    ctx.rect(w * 0.1, h * 0.3, w * 0.2, h * 0.7);
+    // Right pillar outline
+    ctx.rect(w * 0.65, h * 0.2, w * 0.2, h * 0.8);
+    // Beam outline
+    ctx.rect(w * 0.45, h * 0.1, w * 0.35, h * 0.2);
+    // Mid pillar outline
+    ctx.rect(w * 0.4, h * 0.6, w * 0.15, h * 0.4);
+    
+    // Cracks / block separators
+    ctx.moveTo(w * 0.1, h * 0.5); ctx.lineTo(w * 0.3, h * 0.5);
+    ctx.moveTo(w * 0.1, h * 0.75); ctx.lineTo(w * 0.3, h * 0.75);
+    ctx.moveTo(w * 0.65, h * 0.45); ctx.lineTo(w * 0.85, h * 0.45);
+    ctx.moveTo(w * 0.65, h * 0.7); ctx.lineTo(w * 0.85, h * 0.7);
     ctx.stroke();
 
     // White highlights
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(w * 0.54, 4); ctx.lineTo(w * 0.88, 4);
+    ctx.moveTo(w * 0.46, h * 0.12); ctx.lineTo(w * 0.78, h * 0.12);
     ctx.stroke();
   }
 
-  // 5. ROCK SPIKES (60x44) — Five sharp triangular spires in a stepped row
+  // 5. ROCK SPIKES (65x50)
   drawRockSpikes(ctx) {
     const w = this.width;
     const h = this.height;
 
-    // 5 Spikes from left to right: (x1, apexX, x2, apexY)
+    // 4 Spikes
     const spires = [
-      { x1: 0, xPeak: w * 0.12, x2: w * 0.25, yPeak: h * 0.45 },
-      { x1: w * 0.15, xPeak: w * 0.32, x2: w * 0.48, yPeak: h * 0.2 },
-      { x1: w * 0.32, xPeak: w * 0.52, x2: w * 0.72, yPeak: 2 }, // Center tallest
-      { x1: w * 0.58, xPeak: w * 0.74, x2: w * 0.88, yPeak: h * 0.24 },
-      { x1: w * 0.76, xPeak: w * 0.9, x2: w, yPeak: h * 0.48 }
+      { x1: 0, xPeak: w * 0.2, x2: w * 0.35, yPeak: h * 0.3 },
+      { x1: w * 0.15, xPeak: w * 0.45, x2: w * 0.75, yPeak: 2 }, // Center tallest
+      { x1: w * 0.5, xPeak: w * 0.7, x2: w * 0.85, yPeak: h * 0.25 },
+      { x1: w * 0.7, xPeak: w * 0.9, x2: w, yPeak: h * 0.4 }
     ];
 
     for (const s of spires) {
@@ -445,6 +447,8 @@ export class Obstacle {
       ctx.moveTo(s.x1, h);
       ctx.lineTo(s.xPeak, s.yPeak);
       ctx.lineTo(s.x2, h);
+      ctx.moveTo(s.xPeak, s.yPeak);
+      ctx.lineTo(s.xPeak, h);
       ctx.stroke();
 
       // White ridge highlight
@@ -455,13 +459,6 @@ export class Obstacle {
       ctx.lineTo(s.xPeak, s.yPeak + 2);
       ctx.stroke();
     }
-
-    // Base rock rubble
-    ctx.fillStyle = '#3c3c48';
-    ctx.beginPath();
-    ctx.arc(w * 0.25, h - 2, 4, 0, Math.PI * 2);
-    ctx.arc(w * 0.65, h - 2, 4, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   // 6. FLYING (58x34) — Winged dragon/drone soaring at altitude

@@ -79,12 +79,12 @@ export class ObstacleManager {
    * @param {number} score
    * @returns {number} Points earned this frame
    */
-  update(speed, score = 0) {
+  update(speed, score = 0, frameScale = 1) {
     let earnedPoints = 0;
 
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
-      obs.update(speed);
+      obs.update(speed, frameScale);
 
       // Award score exactly once when obstacle is successfully passed by the dragon
       if (!obs.passed && (obs.x + obs.width < DRAGON_X)) {

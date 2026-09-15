@@ -10,6 +10,7 @@ import {
   DRAGON_HEIGHT,
   GROUND_Y,
   GRAVITY,
+  FRAME_TIME,
   JUMP_FORCE,
   JUMP_FORCE_BOOSTED,
   JUMP_RAMP_FRAMES,
@@ -132,11 +133,13 @@ export class Dragon {
    * @param {number} score Current internal game score
    */
   update(inputHandler, dt = 16.66, score = 0) {
+    const frameScale = dt / FRAME_TIME;
+
     if (this.isHit) {
       // Keep on ground if hit
       if (!this.isGrounded) {
-        this.vy += GRAVITY;
-        this.y += this.vy;
+        this.vy += GRAVITY * frameScale;
+        this.y += this.vy * frameScale;
         if (this.y >= GROUND_Y) {
           this.y = GROUND_Y;
           this.vy = 0;
@@ -154,11 +157,12 @@ export class Dragon {
     // Apply gravity & vertical velocity integration
     if (!this.isGrounded) {
       if (this.jumpImpulseFramesRemaining > 0) {
-        this.vy += this.jumpImpulse;
-        this.jumpImpulseFramesRemaining -= 1;
+        const impulseScale = Math.min(frameScale, this.jumpImpulseFramesRemaining);
+        this.vy += this.jumpImpulse * impulseScale;
+        this.jumpImpulseFramesRemaining -= impulseScale;
       }
-      this.vy += GRAVITY;
-      this.y += this.vy;
+      this.vy += GRAVITY * frameScale;
+      this.y += this.vy * frameScale;
 
       // Ground collision check
       if (this.y >= GROUND_Y) {

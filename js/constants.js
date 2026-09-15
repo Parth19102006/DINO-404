@@ -19,10 +19,11 @@ export const JUMP_FORCE = -12.4;
 export const JUMP_FORCE_BOOSTED = -13.6;
 export const JUMP_RAMP_FRAMES = 3;
 
-// Speed Progression Configuration (Starts at 4.0, increases by +0.2 every 50 points)
+// Speed Progression Configuration (Starts at 4.0, increases by +0.5 every 50 points)
 export const INITIAL_SPEED = 4.0;
-export const SPEED_INCREMENT = 0.2;
-export const SPEED_INTERVAL_POINTS = 50;
+export const SPEED_INCREMENT = 0.5;
+export const SPEED_INTERVAL_POINTS = 30;
+export const FRAME_TIME = 1000 / 60;
 
 // Run Animation Swap Interval in milliseconds
 export const RUN_ANIMATION_INTERVAL = 150;
@@ -39,7 +40,7 @@ export const OBSTACLE_CONFIGS = {
   STONE: {
     type: 'STONE',
     w: 44,
-    h: 26,
+    h: 34,
     points: 10,
     weightEarly: 0.32,
     weightLate: 0.25,
@@ -48,7 +49,7 @@ export const OBSTACLE_CONFIGS = {
   CRYSTAL: {
     type: 'CRYSTAL',
     w: 44,
-    h: 42,
+    h: 52,
     points: 20,
     weightEarly: 0.28,
     weightLate: 0.22,
@@ -57,7 +58,7 @@ export const OBSTACLE_CONFIGS = {
   BUSH: {
     type: 'BUSH',
     w: 52,
-    h: 34,
+    h: 42,
     points: 30,
     weightEarly: 0.25,
     weightLate: 0.20,
@@ -66,7 +67,7 @@ export const OBSTACLE_CONFIGS = {
   RUINS: {
     type: 'RUINS',
     w: 58,
-    h: 46,
+    h: 54,
     points: 40,
     weightEarly: 0.15,
     weightLate: 0.12,
@@ -75,7 +76,7 @@ export const OBSTACLE_CONFIGS = {
   ROCK_SPIKES: {
     type: 'ROCK_SPIKES',
     w: 60,
-    h: 44,
+    h: 52,
     points: 50,
     weightEarly: 0.00, // Strictly locked before 200 points
     weightLate: 0.11,  // Unlocked at 200+ points
@@ -84,7 +85,7 @@ export const OBSTACLE_CONFIGS = {
   FLYING: {
     type: 'FLYING',
     w: 58,
-    h: 34,
+    h: 42,
     points: 30,
     weightEarly: 0.10, // Available from 0+ points
     weightLate: 0.10,

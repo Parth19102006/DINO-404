@@ -77,8 +77,8 @@ export class Ground {
     return features;
   }
 
-  update(speed = INITIAL_SPEED) {
-    this.offsetX += speed;
+  update(speed = INITIAL_SPEED, frameScale = 1) {
+    this.offsetX += speed * frameScale;
     if (this.offsetX >= this.patternWidth) {
       this.offsetX -= this.patternWidth;
     }
