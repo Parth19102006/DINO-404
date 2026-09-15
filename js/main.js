@@ -106,8 +106,14 @@ class GameEngine {
     this.canvas.width = windowW;
     this.canvas.height = windowH;
 
-    const scaleX = windowW / GAME_WIDTH;
-    const scaleY = windowH / GAME_HEIGHT;
+    const isMobilePortrait = windowW <= 768 && windowH > windowW;
+    const horizontalPadding = isMobilePortrait ? 18 : 32;
+    const verticalPadding = isMobilePortrait ? 110 : 60;
+    const safeWidth = Math.max(1, windowW - (horizontalPadding * 2));
+    const safeHeight = Math.max(1, windowH - verticalPadding);
+
+    const scaleX = safeWidth / GAME_WIDTH;
+    const scaleY = safeHeight / GAME_HEIGHT;
     this.scale = Math.min(scaleX, scaleY);
 
     this.offsetX = (windowW - (GAME_WIDTH * this.scale)) / 2;
