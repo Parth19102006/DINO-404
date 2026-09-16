@@ -206,8 +206,9 @@ export class Dragon {
 
     // Calculate aspect ratio and dimensions
     const aspect = sprite.width / sprite.height;
-    const renderH = DRAGON_HEIGHT;
-    const renderW = DRAGON_HEIGHT * aspect;
+    // Reduce visual size by 12% to improve visual balance
+    const renderH = DRAGON_HEIGHT * 0.88;
+    const renderW = renderH * aspect;
 
     // Anchor: Feet touch `this.y` (GROUND_Y when grounded)
     const drawX = this.x;

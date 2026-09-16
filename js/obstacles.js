@@ -11,6 +11,8 @@
 
 import { GROUND_Y } from './constants.js';
 
+const VISUAL_OBSTACLE_SCALE = 1.9;
+
 export class Obstacle {
   constructor(config, x, altitude = 0) {
     this.type = config.type;
@@ -90,21 +92,23 @@ export class Obstacle {
   }
 
   getRenderDimensions() {
+    const scale = VISUAL_OBSTACLE_SCALE;
+
     switch (this.type) {
       case 'STONE':
-        return { w: 44, h: 44 };
+        return { w: 44 * scale, h: 44 * scale };
       case 'CRYSTAL':
-        return { w: 50, h: 58 };
+        return { w: 55 * scale, h: 50 * scale };
       case 'BUSH':
-        return { w: 48, h: 58 };
+        return { w: 45 * scale, h: 55 * scale };
       case 'RUINS':
-        return { w: 65, h: 64 };
+        return { w: 70 * scale, h: 60 * scale };
       case 'ROCK_SPIKES':
-        return { w: 65, h: 58 };
+        return { w: 70 * scale, h: 55 * scale };
       case 'FLYING':
-        return { w: 58, h: 46 };
+        return { w: 58 * scale, h: 46 * scale };
       default:
-        return { w: this.width, h: this.height };
+        return { w: this.width * scale, h: this.height * scale };
     }
   }
 
