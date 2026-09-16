@@ -87,6 +87,86 @@ export class Cloud {
     
     // Generate internal curved contour strokes to give a swirling look
     this.contours = this.generateContours(2 + Math.floor(Math.random() * 2), this.baseW, this.baseH);
+
+    this.cachedCanvas = null;
+    this.cacheCloud();
+  }
+
+  cacheCloud() {
+    this.cachedCanvas = document.createElement('canvas');
+    const padding = 20; // To account for lobes extending beyond baseW/baseH
+    this.cachedCanvas.width = this.baseW + padding * 2;
+    this.cachedCanvas.height = this.baseH + padding * 2;
+    
+    const ctx = this.cachedCanvas.getContext('2d');
+    ctx.translate(padding + this.baseW * 0.5, padding + this.baseH * 0.5);
+
+    const w = this.baseW;
+    const h = this.baseH;
+
+    // 1. Build clipping path of the entire cloud (back lobes + base)
+    ctx.beginPath();
+    for (const lobe of this.lobesBack) {
+      drawOrganicLobe(ctx, lobe.x - w * 0.5, lobe.y - h * 0.5, lobe.r, lobe.seed);
+    }
+    // Solid core for the base so there are no holes
+    drawOrganicLobe(ctx, 0, h * 0.15, w * 0.35, this.seed); 
+    
+    ctx.save();
+    ctx.clip(); // Clip everything to the back lobes & core
+
+    // Fill the back layer area
+    ctx.fillStyle = '#282834';
+    ctx.fillRect(-w, -h, w * 2, h * 2);
+
+    // Draw the front layer area
+    ctx.fillStyle = '#3a3a4a';
+    ctx.beginPath();
+    for (const lobe of this.lobesFront) {
+      drawOrganicLobe(ctx, lobe.x - w * 0.5, lobe.y - h * 0.5 + h * 0.1, lobe.r, lobe.seed + 100);
+    }
+    // Solid core for the front layer
+    drawOrganicLobe(ctx, 0, h * 0.25, w * 0.3, this.seed + 100);
+    ctx.fill();
+
+    // Subtle curved internal strokes/contours (swirling wind-like appearance)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (const c of this.contours) {
+      ctx.moveTo(c.sx - w * 0.5, c.sy - h * 0.5);
+      ctx.bezierCurveTo(c.cp1x - w * 0.5, c.cp1y - h * 0.5, c.cp2x - w * 0.5, c.cp2y - h * 0.5, c.ex - w * 0.5, c.ey - h * 0.5);
+    }
+    
+    // Add some swooping strokes around the top front lobes
+    for (let i = 0; i < this.lobesFront.length; i += 2) {
+       const lobe = this.lobesFront[i];
+       const lx = lobe.x - w * 0.5;
+       const ly = lobe.y - h * 0.5;
+       ctx.moveTo(lx - lobe.r * 0.7, ly - lobe.r * 0.2);
+       ctx.quadraticCurveTo(lx, ly - lobe.r * 0.9, lx + lobe.r * 0.8, ly + lobe.r * 0.1);
+    }
+    ctx.stroke();
+
+    // Overlay procedural noise texture inside the cloud
+    ctx.fillStyle = getNoisePattern(ctx);
+    ctx.save();
+    ctx.translate(this.noiseOffsetX, this.noiseOffsetY);
+    ctx.fillRect(-this.noiseOffsetX - w, -this.noiseOffsetY - h, w * 2, h * 2);
+    ctx.restore();
+
+    ctx.restore(); // Remove clipping mask
+
+    // Subtle outline on the outside edge to frame the organic shape
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (const lobe of this.lobesBack) {
+      drawOrganicLobe(ctx, lobe.x - w * 0.5, lobe.y - h * 0.5, lobe.r, lobe.seed);
+    }
+    drawOrganicLobe(ctx, 0, h * 0.15, w * 0.35, this.seed); 
+    ctx.stroke();
   }
 
   generateLobes(count, w, h) {
@@ -150,80 +230,19 @@ export class Cloud {
   }
 
   draw(ctx) {
+    if (!this.cachedCanvas) return;
+
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.scale(this.scale, this.scale);
 
-    const w = this.baseW;
-    const h = this.baseH;
-    
-    // Vary transparency slightly based on parallax for depth
     const alpha = 0.5 + (this.parallax * 0.5);
     ctx.globalAlpha = alpha;
-
-    // 1. Build clipping path of the entire cloud (back lobes + base)
-    ctx.beginPath();
-    for (const lobe of this.lobesBack) {
-      drawOrganicLobe(ctx, lobe.x, lobe.y, lobe.r, lobe.seed);
-    }
-    // Solid core for the base so there are no holes
-    drawOrganicLobe(ctx, w * 0.5, h * 0.65, w * 0.35, this.seed); 
     
-    ctx.save();
-    ctx.clip(); // Clip everything to the back lobes & core
+    const padding = 20;
+    ctx.drawImage(this.cachedCanvas, -padding - this.baseW * 0.5, -padding - this.baseH * 0.5);
 
-    // Fill the back layer area
-    ctx.fillStyle = '#282834';
-    ctx.fillRect(-w * 0.5, -h * 0.5, w * 2, h * 2);
-
-    // Draw the front layer area
-    ctx.fillStyle = '#3a3a4a';
-    ctx.beginPath();
-    for (const lobe of this.lobesFront) {
-      drawOrganicLobe(ctx, lobe.x, lobe.y + h * 0.1, lobe.r, lobe.seed + 100);
-    }
-    // Solid core for the front layer
-    drawOrganicLobe(ctx, w * 0.5, h * 0.75, w * 0.3, this.seed + 100);
-    ctx.fill();
-
-    // Subtle curved internal strokes/contours (swirling wind-like appearance)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1.5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (const c of this.contours) {
-      ctx.moveTo(c.sx, c.sy);
-      ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.ex, c.ey);
-    }
-    
-    // Add some swooping strokes around the top front lobes
-    for (let i = 0; i < this.lobesFront.length; i += 2) {
-       const lobe = this.lobesFront[i];
-       ctx.moveTo(lobe.x - lobe.r * 0.7, lobe.y - lobe.r * 0.2);
-       ctx.quadraticCurveTo(lobe.x, lobe.y - lobe.r * 0.9, lobe.x + lobe.r * 0.8, lobe.y + lobe.r * 0.1);
-    }
-    ctx.stroke();
-
-    // Overlay procedural noise texture inside the cloud
-    ctx.fillStyle = getNoisePattern(ctx);
-    ctx.save();
-    ctx.translate(this.noiseOffsetX, this.noiseOffsetY);
-    ctx.fillRect(-this.noiseOffsetX - w, -this.noiseOffsetY - h, w * 3, h * 3);
     ctx.restore();
-
-    ctx.restore(); // Remove clipping mask
-
-    // Subtle outline on the outside edge to frame the organic shape
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    for (const lobe of this.lobesBack) {
-      drawOrganicLobe(ctx, lobe.x, lobe.y, lobe.r, lobe.seed);
-    }
-    drawOrganicLobe(ctx, w * 0.5, h * 0.65, w * 0.35, this.seed); 
-    ctx.stroke();
-
-    ctx.restore(); // Restore scale/translate
   }
 }
 

@@ -103,8 +103,12 @@ class GameEngine {
     const windowW = window.innerWidth;
     const windowH = window.innerHeight;
 
-    this.canvas.width = windowW;
-    this.canvas.height = windowH;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    this.canvas.width = Math.floor(windowW * dpr);
+    this.canvas.height = Math.floor(windowH * dpr);
+    this.canvas.style.width = `${windowW}px`;
+    this.canvas.style.height = `${windowH}px`;
 
     const isMobilePortrait = windowW <= 768 && windowH > windowW;
     const horizontalPadding = isMobilePortrait ? 18 : 32;
@@ -114,10 +118,12 @@ class GameEngine {
 
     const scaleX = safeWidth / GAME_WIDTH;
     const scaleY = safeHeight / GAME_HEIGHT;
-    this.scale = Math.min(scaleX, scaleY);
+    const baseScale = Math.min(scaleX, scaleY);
+    
+    this.scale = baseScale * dpr;
 
-    this.offsetX = (windowW - (GAME_WIDTH * this.scale)) / 2;
-    this.offsetY = (windowH - (GAME_HEIGHT * this.scale)) / 2;
+    this.offsetX = Math.floor((windowW - (GAME_WIDTH * baseScale)) / 2) * dpr;
+    this.offsetY = Math.floor((windowH - (GAME_HEIGHT * baseScale)) / 2) * dpr;
 
     this.ctx.imageSmoothingEnabled = true;
     this.ctx.imageSmoothingQuality = 'high';

@@ -12,6 +12,42 @@ export class Ground {
     this.offsetX = 0;
     this.patternWidth = 1200; // Repeat period for procedural features
     this.features = this.generateFeatures();
+    this.cachedCanvas = null;
+    this.cacheGround();
+  }
+
+  cacheGround() {
+    this.cachedCanvas = document.createElement('canvas');
+    this.cachedCanvas.width = this.patternWidth;
+    this.cachedCanvas.height = GAME_HEIGHT - GROUND_Y;
+    
+    const ctx = this.cachedCanvas.getContext('2d');
+    
+    // Procedural features
+    for (const feat of this.features) {
+      const renderY = feat.y - GROUND_Y;
+      
+      if (feat.type === 'pebble') {
+        ctx.fillStyle = feat.color;
+        ctx.fillRect(feat.x, renderY, feat.size, feat.size);
+      } else if (feat.type === 'rock') {
+        ctx.fillStyle = feat.color;
+        ctx.beginPath();
+        ctx.moveTo(feat.x + feat.points[0].dx, renderY + feat.points[0].dy);
+        for (let p = 1; p < feat.points.length; p++) {
+          ctx.lineTo(feat.x + feat.points[p].dx, renderY + feat.points[p].dy);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else if (feat.type === 'crack') {
+        ctx.strokeStyle = feat.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(feat.x, renderY);
+        ctx.lineTo(feat.x + feat.dx, renderY + feat.dy);
+        ctx.stroke();
+      }
+    }
   }
 
   /**
@@ -89,45 +125,15 @@ export class Ground {
     ctx.fillStyle = '#1c1c20';
     ctx.fillRect(0, GROUND_Y, GAME_WIDTH, GAME_HEIGHT - GROUND_Y);
 
-    // 2. Draw procedural rocky details & cracks below surface
-    ctx.save();
-    for (const feat of this.features) {
-      // Calculate wrapped X coordinate for seamless continuous scrolling
-      let drawX = (feat.x - this.offsetX) % this.patternWidth;
-      if (drawX < -50) drawX += this.patternWidth;
-
-      // Draw feature at drawX (and wrap-around instance if near canvas right edge)
-      const renderInstances = [drawX];
-      if (drawX + 50 > GAME_WIDTH) {
-        renderInstances.push(drawX - this.patternWidth);
-      }
-
-      for (const rx of renderInstances) {
-        if (rx < -50 || rx > GAME_WIDTH + 50) continue;
-
-        if (feat.type === 'pebble') {
-          ctx.fillStyle = feat.color;
-          ctx.fillRect(rx, feat.y, feat.size, feat.size);
-        } else if (feat.type === 'rock') {
-          ctx.fillStyle = feat.color;
-          ctx.beginPath();
-          ctx.moveTo(rx + feat.points[0].dx, feat.y + feat.points[0].dy);
-          for (let p = 1; p < feat.points.length; p++) {
-            ctx.lineTo(rx + feat.points[p].dx, feat.y + feat.points[p].dy);
-          }
-          ctx.closePath();
-          ctx.fill();
-        } else if (feat.type === 'crack') {
-          ctx.strokeStyle = feat.color;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(rx, feat.y);
-          ctx.lineTo(rx + feat.dx, feat.y + feat.dy);
-          ctx.stroke();
-        }
+    // 2. Draw cached features
+    if (this.cachedCanvas) {
+      const drawX = -this.offsetX;
+      ctx.drawImage(this.cachedCanvas, drawX, GROUND_Y);
+      // If we need to loop around
+      if (drawX + this.patternWidth < GAME_WIDTH) {
+        ctx.drawImage(this.cachedCanvas, drawX + this.patternWidth, GROUND_Y);
       }
     }
-    ctx.restore();
 
     // 3. Crisp Top Surface Line (White / Light Gray running surface at exact GROUND_Y)
     ctx.strokeStyle = '#e6e6e6';

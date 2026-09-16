@@ -13,6 +13,8 @@ import { GROUND_Y } from './constants.js';
 
 const VISUAL_OBSTACLE_SCALE = 1.9;
 
+const obstacleCache = {};
+
 export class Obstacle {
   constructor(config, x, altitude = 0) {
     this.type = config.type;
@@ -57,7 +59,41 @@ export class Obstacle {
 
   draw(ctx) {
     const renderDimensions = this.getRenderDimensions();
+    
+    // Only static obstacles are cached; flying obstacle is animated
+    if (!this.isFlying) {
+      if (!obstacleCache[this.type]) {
+        const c = document.createElement('canvas');
+        c.width = renderDimensions.w;
+        c.height = renderDimensions.h;
+        const cctx = c.getContext('2d');
+        
+        cctx.save();
+        // Since we are drawing at 0,0 in the cache canvas, we adjust scaling
+        // The original rendering centered it based on this.x and this.y, 
+        // we'll center it locally in the cache canvas
+        cctx.scale(renderDimensions.w / this.width, renderDimensions.h / this.height);
+        
+        // original switch used this.width and this.height
+        switch (this.type) {
+          case 'STONE': this.drawStone(cctx); break;
+          case 'CRYSTAL': this.drawCrystal(cctx); break;
+          case 'BUSH': this.drawSingleSpike(cctx); break;
+          case 'RUINS': this.drawRuins(cctx); break;
+          case 'ROCK_SPIKES': this.drawRockSpikes(cctx); break;
+          default: this.drawStone(cctx);
+        }
+        cctx.restore();
+        obstacleCache[this.type] = c;
+      }
+      
+      const drawX = this.x - ((renderDimensions.w - this.width) / 2);
+      const drawY = this.y - (renderDimensions.h - this.height);
+      ctx.drawImage(obstacleCache[this.type], drawX, drawY);
+      return;
+    }
 
+    // Dynamic drawing for flying obstacles
     ctx.save();
     ctx.translate(
       this.x - ((renderDimensions.w - this.width) / 2),
