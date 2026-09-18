@@ -11,6 +11,7 @@ import {
   INITIAL_SPEED,
   SPEED_INCREMENT,
   SPEED_INTERVAL_POINTS,
+  MAX_GAME_SPEED,
   FRAME_TIME,
   STORAGE_BEST_SCORE_KEY
 } from './constants.js';
@@ -179,9 +180,12 @@ class GameEngine {
           this.saveBestScore();
         }
 
-        // Update speed progression: +0.5 px/frame every 50 points
+        // Update speed progression: +0.2 px/frame every 50 points, capped at 7 px/frame
         const speedSteps = Math.floor(this.score / SPEED_INTERVAL_POINTS);
-        this.currentSpeed = INITIAL_SPEED + (speedSteps * SPEED_INCREMENT);
+        this.currentSpeed = Math.min(
+          MAX_GAME_SPEED,
+          INITIAL_SPEED + (speedSteps * SPEED_INCREMENT)
+        );
 
         this.updateScoreUI();
       }

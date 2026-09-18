@@ -19,10 +19,11 @@ export const JUMP_FORCE = -12.4;
 export const JUMP_FORCE_BOOSTED = -13.6;
 export const JUMP_RAMP_FRAMES = 3;
 
-// Speed Progression Configuration (Starts at 4.0, increases by +0.5 every 50 points)
+// Speed Progression Configuration (Starts at 4.0, increases by +0.2 every 50 points)
 export const INITIAL_SPEED = 4.0;
-export const SPEED_INCREMENT = 0.5;
-export const SPEED_INTERVAL_POINTS = 30;
+export const SPEED_INCREMENT = 0.2;
+export const SPEED_INTERVAL_POINTS = 50;
+export const MAX_GAME_SPEED = 7;
 export const FRAME_TIME = 1000 / 60;
 
 // Run Animation Swap Interval in milliseconds
